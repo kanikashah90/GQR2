@@ -1,0 +1,2 @@
+Q1(a0)  :-  affiliatedOrganizationOf(a1,a2), headOf(a0,a1)
+Q2(a0)  :-  affiliatedOrganizationOf(a1,a2), worksFor(a0,a1)

@@ -1,0 +1,407 @@
+package isi.mediator;
+// __COPYRIGHT_START__
+//
+// Copyright 2009 University of Southern California. All Rights Reserved.
+//
+// __COPYRIGHT_END__
+
+import java.util.ArrayList;
+
+public class Database 
+{ 
+  private ArrayList<Relation> relations = new ArrayList<Relation>();
+
+ 
+  public void addRelation(Relation rel)
+  {
+    relations.add(rel);
+  }
+
+  public void addRelation(Predicate p){
+	  
+	  //System.out.println("Add to DB relation: " + p);
+	  
+	  Relation r = getRelation(p.getName());
+	  if(r==null){
+		  //relation doesn't exist 
+		  r = new Relation(p.getName());
+		  relations.add(r);
+	  }
+	  ArrayList<Term> terms = p.getTerms();
+	  Tuple tuple = new Tuple();
+	  for(int i=0; i<terms.size(); i++){
+		  Term t = terms.get(i);
+		  tuple.addValue(t.getTermValue());
+	  }
+	  r.addTuple(tuple);
+  }
+  
+//  public Relation getRelation(String name){
+//      for (int i=0; i<relations.size(); i++) {
+//    	  Relation r = relations.get(i);
+//    	  if(r.getName().equals(name))
+//    		  return r;
+//      }
+//      return null;
+//  }
+  public Relation getRelation(String name){
+	     for (int i=0; i<relations.size(); i++) {
+	         Relation r = relations.get(i);
+	         if(r.getName().equals(name.toLowerCase()))
+	                 return r;
+	     }
+	     return null;
+	 }
+  public Relation getRelation(RelationPredicate p) {
+//	  System.out.println("Get Relation:" + p.getName());
+	  
+	  ArrayList<Predicate> expandedPredicate = p.expandInConjunctiveFormula();
+	  
+//	  System.out.println("Expanded predicate=" + expandedPredicate);
+	  
+	  Predicate p0 = expandedPredicate.get(0);
+	  //get relation
+	  Relation r = getRelation(p0.getName());
+	  if(r!=null){
+		  r = r.clone();
+		  ArrayList<String> attrs = p0.getVarsAndConst();
+		  r.setAttrList(new AttrList(attrs));
+		  //execute the predicates over the relation
+		  for(int i=1; i<expandedPredicate.size(); i++){
+			  //these are either x="10" or x2=x4
+			  Predicate p1 = expandedPredicate.get(i);
+			  Term t1 = p1.getTerms().get(0);
+			  Term t2 = p1.getTerms().get(1);
+			  
+			  r=r.select(t1.getVar(),t2.getTermValue());
+		  }
+		  
+		  //before returning use the initial attributes; we need the initial names to find joins between predicates
+		  r.setAttrListAllowDuplicates(p.getVarsAndConst());
+	  }	  
+	  return r;
+  }
+  
+  @Override
+public String toString()
+  {
+	  String s = "Database:\n";
+      for (int i=0; i<relations.size(); i++) {
+        s += relations.get(i).toString();
+      }
+      return s;
+  }
+
+}
+--------------------up there wwas database.java
+---below is relation.java
+
+package isi.mediator;
+// __COPYRIGHT_START__
+//
+// Copyright 2009 University of Southern California. All Rights Reserved.
+//
+// __COPYRIGHT_END__
+
+import java.util.ArrayList;
+import java.util.Vector;
+
+public class Relation 
+{ 
+  private String name;
+  private AttrList attrList;
+  private ArrayList<Tuple> tuples = new ArrayList<Tuple>();
+
+  public Relation(String a_name, String a_attrList) 
+  {
+    name = a_name.toLowerCase();
+    attrList = new AttrList(a_attrList);
+  } 
+
+  public Relation(String a_name, AttrList a_attrList) 
+  {
+    name = a_name.toLowerCase();
+    attrList = a_attrList;
+  } 
+
+  public Relation(String a_name) 
+  {
+    name = a_name.toLowerCase();
+    attrList = null;
+  } 
+
+  @Override
+public Relation clone(){
+	  Relation r = new Relation(name);
+	  if(attrList!=null)
+		  r.attrList = attrList.clone();
+	  for(int i=0; i<tuples.size(); i++){
+		  r.addTuple(tuples.get(i).clone());
+	  }
+	  return r;
+  }
+  
+  public boolean isEmpty(){
+	  return tuples.isEmpty();
+  }
+  
+  public void addTuple(Tuple a_row)
+  {
+    tuples.add(a_row);
+  }
+
+  public String getName() 
+  { 
+    return name;
+  }
+
+  public void setName(String name){
+	  this.name=name;
+  }
+  
+  public AttrList getAttrList() 
+  { 
+    return attrList;
+  }
+
+  public ArrayList<Tuple> getTuples() 
+  { 
+    return tuples;
+  }
+
+    public void setAttrList(AttrList attrList){
+    	this.attrList=attrList;
+    }
+
+    public void setAttrListAllowDuplicates(ArrayList<String> attrs){
+    	attrList = new AttrList();
+    	for(int i=0; i<attrs.size(); i++){
+    		attrList.addAttr(attrs.get(i));
+    	}
+    }
+    
+    public void addAttr(String attr){
+    	attrList.addAttr(attr);
+    }
+
+    public int findPosition(String attrName){
+    	return attrList.findPosition(attrName);
+    }
+
+    public ArrayList<Integer> findPosition(ArrayList<String> attrNames){
+    	ArrayList<Integer> inds = new ArrayList<Integer>();
+    
+		for(int i=0; i<attrNames.size(); i++){
+			String attrName = attrNames.get(i);
+			inds.add(attrList.findPosition(attrName));
+		}
+		return inds;
+    }
+
+    //return all common attributes between this relation and r
+	public ArrayList<String> findCommonAttrs(Relation r){
+		//System.out.println("Common in: " + this + " and " + p);
+		ArrayList<String> attrs = new ArrayList<String>();
+		ArrayList<String> names1 = attrList.getNames();
+		ArrayList<String> names2 = r.attrList.getNames();
+		for(int i=0; i<names1.size(); i++){
+			String name1 = names1.get(i);
+			if(names2.contains(name1))
+				attrs.add(name1);
+		}
+		if(attrs.isEmpty())
+			return null;
+		else
+			return attrs;
+	}
+
+	//returns true if we find a tuple which has the values of "attrs" equals to "vals"
+	public boolean containsTuple(ArrayList<String> attrs, ArrayList<String> vals){
+
+		//System.out.println("Check Contains Tuple in:" + this);
+		//System.out.println("For Attributes:" + attrs);
+		
+		  for(int i=0; i<tuples.size(); i++){
+			  Tuple t = tuples.get(i);
+			  boolean foundTuple = true;
+			  for(int j=0; j<attrs.size(); j++){
+				  int pos = findPosition(attrs.get(j));
+				  if(pos==-1) return false;
+				  String val = (String)t.getValue(pos);
+				  if(!val.equals(vals.get(j))){
+					  foundTuple=false;
+					  break;
+				  }
+			  }
+			  if(foundTuple)
+				  return true;
+		  }
+		return false;
+	}
+	
+  public Relation union(Relation a_rel)
+  {
+    /* FIX: should ensure that both are type compatible */
+    Relation r = new Relation(getName()+"_"+a_rel.getName(), getAttrList());
+
+    for (int i=0; i<tuples.size(); i++) 
+      r.addTuple(tuples.get(i));
+
+    ArrayList<Tuple> relTuples = a_rel.tuples;
+    for (int i=0; i<relTuples.size(); i++) 
+      r.addTuple(relTuples.get(i));
+
+    return r;
+  }
+
+  public Relation join(Relation rel2){
+	  
+	  Relation rel = null;
+	  if(rel2==null){
+		  rel = clone();
+		  rel.setName("ResultRelation");
+	  }
+	  else{
+		  //join this with rel2
+		  //first find the common attributes; I will join on those
+		  ArrayList<String> joinAttrs = findCommonAttrs(rel2);
+		  rel = join(rel2,joinAttrs, "ResultRelation");
+	  }
+	  return rel;
+  }
+
+  //join this relation with rel
+  //if joinAttrs=null => cross product
+  //else join on joinAttrs
+  public Relation join(Relation rel, ArrayList<String> joinAttrs, String name){
+	  
+	  //System.out.println("Join Rel1:" + this + " Join rel2: " + rel);
+	  //System.out.println("Join on Attrs:" + joinAttrs);
+	  
+	  Relation out = new Relation(name);
+	  //I don't want the duplicate joinAttr in the attribute list
+	  AttrList newAttrs = new AttrList();
+	  if(joinAttrs==null){
+		  newAttrs=getAttrList();
+	  }
+	  else{
+		  for(int k=0; k<getAttrList().size(); k++){
+			  Attr a = getAttrList().getAttrAtPosition(k);
+			  String attrName = a.getName();
+			  if(!joinAttrs.contains(attrName))
+				  newAttrs.addAttr(a);
+		  }
+	  }
+	  newAttrs.appendAttributes(rel.getAttrList());
+	  out.setAttrList(newAttrs);
+	  
+	  //position of joinAttr
+	  ArrayList<Integer> i1=null, i2=null;
+	  if(joinAttrs!=null){
+		  //find location of joinAttrs
+		  i1 = findPosition(joinAttrs);
+		  i2 = rel.findPosition(joinAttrs);
+	  }
+	  
+	  for(int i=0; i<tuples.size(); i++){
+		  Tuple t1 = tuples.get(i);
+		  for(int j=0; j<rel.tuples.size(); j++){
+			  Tuple t2 = rel.tuples.get(j);
+			  //i1 and i2 will be null for cross product
+			  Tuple t = t1.join(t2, i1, i2);
+			  if(t!=null)
+				  out.addTuple(t);
+		  }
+	  }
+	  return out;
+  }
+
+  public Relation select(String var, String val){
+	  
+	  if(!val.startsWith("\""))
+		  return select(var,val,true);
+	  
+	  Relation out = new Relation(name, getAttrList());
+	  int pos = findPosition(var);
+	  
+	  for(int i=0; i<tuples.size(); i++){
+		  Tuple t1 = tuples.get(i);
+		  Tuple t = t1.select(pos,val);
+			  if(t!=null)
+				  out.addTuple(t);
+	  }
+	  return out;
+  }
+
+  public Relation select(String var1, String var2, boolean selectOnVar){
+	  
+	  Relation out = new Relation(name, getAttrList());
+	  int pos1 = findPosition(var1);
+	  int pos2 = findPosition(var2);
+	  
+	  for(int i=0; i<tuples.size(); i++){
+		  Tuple t1 = tuples.get(i);
+		  Tuple t = t1.select(pos1,pos2);
+			  if(t!=null)
+				  out.addTuple(t);
+	  }
+	  return out;
+  }
+
+  public int getNrRows(){
+	  return tuples.size();
+  }
+  
+  public Vector getColumnValues(String name){
+	  Vector result = new Vector();
+	  if(tuples==null)
+		  return result;
+	  for (int i=0; i<tuples.size(); i++){ 
+		  Tuple t = tuples.get(i);
+		  result.add(t.getValue(findPosition(name)));
+	  }
+	  return result;
+  }
+  
+	
+  @Override
+public String toString()
+  {
+      String out = "";
+    out += " RELATION NAME: "+name + "\n"; 
+    out += "ATTRIBUTE LIST: "+attrList + "\n"; 
+    out += "--------------------------------------------------\n";
+    if (tuples != null) {
+      Object[] objs = tuples.toArray();
+      for (int i=0; i<objs.length; i++) {
+        out += 
+          (i<100 ? "0" : "")+
+          (i<10 ? "0" : "")+i+": \n";
+        Tuple t = (Tuple)objs[i];
+        out += t.toString() + "\n";
+      }
+    }
+    out += "--------------------------------------------------\n";
+    return out;
+  }
+
+  public void prettyPrint()
+  {
+    //System.out.println(" RELATION NAME: "+name); 
+    //System.out.println("ATTRIBUTE LIST: "+attrList); 
+    //System.out.println("--------------------------------------------------");
+    if (tuples != null) {
+      Object[] objs = tuples.toArray();
+      for (int i=0; i<objs.length; i++) {
+        System.out.print(
+          (i<100 ? "0" : "")+
+          (i<10 ? "0" : "")+i+": ");
+        Tuple t = (Tuple)objs[i];
+        //System.out.println(t.toString());
+      }
+    }
+    //System.out.println("--------------------------------------------------");
+  }
+
+
+}
