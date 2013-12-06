@@ -1,1 +1,0 @@
-Q2(x0,x1)  :-  MilitaryPerson(x0), hasCategory(x0,x2), hasRole(x1,x0)
