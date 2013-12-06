@@ -1,0 +1,6 @@
+Q1(a0)  :-  Dealer(a0)
+Q2(a0)  :-  StockBroker(a0)
+Q3(a0)  :-  StockExchangeMember(a0)
+Q4(a0)  :-  StockTrader(a0)
+Q5(a0)  :-  Trader(a0)
+Q6(a0)  :-  isExecutedBy(a1,a0)

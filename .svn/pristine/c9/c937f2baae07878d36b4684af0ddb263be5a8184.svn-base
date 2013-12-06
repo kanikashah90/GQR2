@@ -1,0 +1,143 @@
+package gqr;                                                        
+                                             
+/*
+ * Copyright (C) 2011 The Guava Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+import java.io.Serializable;
+
+/**
+ * {@code EquivalenceClass} represents an 
+ * <a href="http://en.wikipedia.org/wiki/Equivalence_relation">equivalence class
+ * </a> that can be merged with another in effectively constant time. 
+ * 
+ * <p>A new {@code EquivalenceClass} is disjoint with every other, that is,
+ * its {@link #equals(Object)} returns {@code true} if and only if it
+ * is called against itself: {@code p.equals(p)}. A {@code EquivalenceClass}
+ * can be {@linkplain #merge(EquivalenceClass) merged} with another, which means
+ * that the merged partitions are now forever equivalent and
+ * interchangeable. For example, calling 
+ * {@code p1.merge(p2); p3.merge(p4); p2.merge(p3);}
+ * (in any order) ensures that all 
+ * of {@code {p1, p2, p3, p4}} are mutually equivalent. 
+ *   
+ * <p>When one only needs to test whether any two elements belong
+ * to the same set, but not iterate over all elements of the set itself,
+ * using {@code EquivalenceClass} to model each set is vastly more efficient
+ * than creating/merging {@code HashSet} instances.
+ * 
+ * <p>This class not thread-safe.
+ * 
+ * @author Dimitris Andreou
+ * @author Louis Wasserman
+ * @see <a href="http://en.wikipedia.org/wiki/Disjoint-set_data_structure">
+ *      Disjoint-set data structure</a>
+ */
+
+public final class EquivalenceClass implements Serializable {
+  private EquivalenceClass parent;
+  private int rank = 0;
+
+  /**
+   * Creates a new {@code EquivalenceClass}, equivalent only to itself.
+   */
+  public EquivalenceClass() {
+    this.parent = this;
+  }
+
+  /**
+   * Merges two equivalence classes, making them forever {@linkplain #equals(Object) 
+   * equivalent} and interchangeable, as if they were a single 
+   * {@code EquivalenceClass} object. If the equivalence classes had already been merged,
+   * this invocation will return {@code false}, otherwise {@code true}.
+   * 
+   * <p>This operation runs in amortized &alpha;(n) time, where &alpha; is the
+   * inverse Ackermann function, effectively a constant.
+   * 
+   * @return {@code true} if the partitions were previously disjoint, otherwise 
+   *         {@code false} (in this case, this invocation was a no-op)
+   */
+  public boolean merge(EquivalenceClass p) {
+	  EquivalenceClass his = p.find();
+	  EquivalenceClass mine = this.find();
+    if (mine == his) {
+      return false;
+    }
+    
+    if (mine.rank < his.rank) {
+      mine.parent = his;
+    } else if (mine.rank > his.rank) {
+      his.parent = mine;
+    } else { // mine.rank == his.rank
+      his.parent = mine;
+      mine.rank++;
+    }
+    return true;
+  }
+
+  /**
+   * Returns {@code true} if and only if this and the specified 
+   * {@code EquivalenceClass} have been merged, {@literal i.e.} if there has been
+   * a sequence of {@linkplain #merge(EquivalenceClass) merge} operations
+   * that connected the two partitions.
+   * 
+   * @return {@code true} if and only if this and the specified 
+   *         {@code EquivalenceClass} have been merged (or are the same instance)
+   */
+  @Override public boolean equals(Object obj) {
+    if (obj instanceof EquivalenceClass) {
+      return find() == ((EquivalenceClass) obj).find();
+    }
+    return false;
+  }
+
+  /** 
+   * Implements single-pass path compression; this invocation, 
+   * trims the path to the result of find() to size ceil(|path| / 2),
+   * making subsequent queries faster.
+   * 
+   * @return the "representative" of this equivalence class (which can be the
+   *         equivalence class itself, if parent loops back to it), which
+   *         represents the identity of the whole equivalence class
+   *         that this partition is in
+   */
+  private EquivalenceClass find() {
+	  EquivalenceClass current = this;
+	  EquivalenceClass last = this;
+    while (current.parent != current) {
+      last.parent = current.parent;
+      last = current;
+      current = current.parent;
+    }
+    return current;
+  }
+
+  /**
+   * Returns a hash code for the equivalence class represented by this
+   * {@code EquivalenceClass}.
+   * 
+   * <p>
+   * This hash code may change as a result of {@code merge}
+   * operations, but if {@code p1.equals(p2)}, then 
+   * {@code p1.hashCode() == p2.hashCode()}.
+   */
+  @Override public int hashCode() {
+    return System.identityHashCode(find());
+  }
+  
+  @Override public String toString() {
+    return "[Partition #" + Integer.toHexString(hashCode()) + "]";
+  }
+  
+  private static final long serialVersionUID = 0L;
+}
