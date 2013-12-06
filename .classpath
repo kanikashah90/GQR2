@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/Aggregator.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/c3p0-0.9.1.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/commons-logging.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/derby.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/derbyclient.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/flexigraph.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/hsqldb.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/jcommon-1.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/jfreechart-1.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/junit-4.10.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/log4j-1.2.14.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/spring-beans.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/spring-core.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/spring-dao.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/libs/spring-jdbc.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/antlr-3.2.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/arq-2.8.8.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/cog-jglobus-1.4.1.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/gav-mediator.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/HermiT.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/icu4j-3.4.4.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/iri-0.8.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/jackcess-1.2.3.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/mysql-connector-java-5.1.10-bin.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ogsadai-client-4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ogsadai-clientserver-4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ogsadai-common-4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ogsadai-dqp-server-4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ogsadai-isi-simple-client.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ogsadai-server-4.2.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/ojdbc5.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/opencsv-1.8.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/openrdf-sesame-2.3.2-onejar.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/owlapi-bin.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/postgresql-8.4-701.jdbc3.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/servlet-api.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/slf4j-api-1.5.8.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/slf4j-log4j12-1.5.8.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/stax-api-1.0.1.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/tdb-0.8.5.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/wsrf_core.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/wstx-asl-3.2.9.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/xercesImpl-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Dummy Copy/GQR 2/mediator-libs/Zql.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
