@@ -62,7 +62,7 @@ class GQRSourceParser extends GQRQueryParser {
 			//we'll store a copy of S
 			createPJ(source);
 			source = parseNextQuery();
-//			System.out.println("view: "+source);
+			System.out.println("view: "+source);
 		}
 		
 		DatalogQuery specialSource = new DatalogQuery();
@@ -91,7 +91,7 @@ class GQRSourceParser extends GQRQueryParser {
 	/* Creates a PJ for the Predicates in the view */
 	void createPJ (DatalogQuery source)
 	{
-		//System.out.println("View: "+ source);
+		System.out.println("View: "+ source);
 		//locally holds for every source S how many occurrences of the same pj this source contains
 		//at the same time the integer value of this map is the index of the place in the list "repeeated_predicates" below in which
 		//we'll store a copy of S

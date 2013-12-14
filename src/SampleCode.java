@@ -45,7 +45,7 @@ class SampleCode
 			}*/
 			
 		long st = System.currentTimeMillis(); 
-		IndexViews viewsIndex = new IndexViews(new File(data.getAbsolutePath()+"/requiem_expansions/"+"testSource.txt"), 50);
+		IndexViews viewsIndex = new IndexViews(new File(data.getAbsolutePath()+"/requiem_expansions/"+"testSource3.txt"), 50);
 		long end = System.currentTimeMillis(); 
 		avgPreTime += (long)(end-st);
 		
@@ -53,7 +53,7 @@ class SampleCode
 				
 		st = System.currentTimeMillis(); 
 		//GQR takes the pre-processed views and the path to query (again do not leave empty lines after the query in the file)
-		GQR g = new GQR(new File(data.getAbsolutePath()+"/requiem_expansions/"+"testQuery.txt"),viewsIndex);
+		GQR g = new GQR(new File(data.getAbsolutePath()+"/requiem_expansions/"+"testQuery3.txt"),viewsIndex);
 
 		List<CompRewriting> res = new ArrayList<CompRewriting>();
 		try {

@@ -325,9 +325,9 @@ public class DatalogParser extends antlr.LLkParser       implements DatalogParse
 			}
 			else if(comparator.equals(">"))
 			{
-				PredicateArgument temp = left;
+//				PredicateArgument temp = left;
 				tempPredElems.set(0, right);
-				tempPredElems.set(1, temp);
+				tempPredElems.set(1, left);
 				pred.addAllElements(tempPredElems);
 				
 			}

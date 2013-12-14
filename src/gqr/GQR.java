@@ -60,6 +60,11 @@ public class GQR {
 
 	//Number of the conjunctive rewritings in the answer
 	private Integer reNo;
+	
+	//savedcomParisonJoins
+	List<Pair<GQRNode,GQRNode>> comParisonJoins = new ArrayList<Pair<GQRNode,GQRNode>>();
+	//savedMap;
+	Map<String,Integer> circleSet = new HashMap<String,Integer>();
 
 //	//enum used in recording measurements
 //	private enum Variables {
@@ -244,7 +249,7 @@ public class GQR {
 	 * Input: A query Q on the mediation schema
 	 * Output: A list of re-writings for the query
 	 * @return a list of conjunctive rewritings (using only source/view relations), whose union is a maximally-contained rewriting of the query
-	 * @throws NonAnswerableQueryException if some part ofthe query cannot covered (or answered) by any source/view
+	 * @throws NonAnswerableQueryException if some part of the query cannot covered (or answered) by any source/view
 	 */
 	public final List<CompRewriting> reformulate(DatalogQuery query) throws NonAnswerableQueryException {
 
@@ -292,6 +297,27 @@ public class GQR {
 
 			CPJCoverSet C = combineSets(A,B); 
 
+			//again add the no conflict PLT
+			if(comParisonJoins.size()>0){
+			System.out.println("have PLT but is ok");
+
+			for(int i =0;i<comParisonJoins.size();i++){
+				GQRNode	sourceVarNode1 = comParisonJoins.get(i).getA();
+				GQRNode	sourceVarNode2 = comParisonJoins.get(i).getB();
+				for(JoinInView jv1: sourceVarNode1.getInfobox().getJoinInViews())
+				{
+					for(JoinInView jv2: sourceVarNode2.getInfobox().getJoinInViews())
+					{
+
+						addEquate(jv1, jv1.getHeadPosition(), jv2, jv2.getHeadPosition(),null/*sourceVarNode1.getQueryDistinguishedVar()*/);
+
+				
+					}
+				}
+			}
+			
+			
+		}
 
 			if(C.isEmpty())
 				throw new NonAnswerableQueryException();
@@ -306,6 +332,8 @@ public class GQR {
 		}
 
 		//		reNo = countRewritings(resultCPJs);
+
+		
 		return collectRewritings(resultCPJs,Util.castQueryAsISISourceQuery(query));
 	}
 
@@ -504,6 +532,7 @@ public class GQR {
 		CPJCoverSet r = new CPJCoverSet();
 		r.setSerialNo(setA.getSerialNo()+setB.getSerialNo());
 
+
 		for(CompositePredicateJoin sa:setA.getCPJs())
 			for(CompositePredicateJoin sb:setB.getCPJs())
 			{	
@@ -511,6 +540,8 @@ public class GQR {
 				if(c != null)//null means uncombinable
 					r.add(c);
 			}
+		
+
 		return r;
 	}
 
@@ -531,6 +562,8 @@ public class GQR {
 
 		CompositePredicateJoin c = new CompositePredicateJoin();
 		exmerges = new HashSet<HashSet<AtomicRewriting>>();
+		
+		//An list to store the PLT info node
 
 		for(Join j: lookupJoins(a,b))
 		{
@@ -539,7 +572,6 @@ public class GQR {
 			//also change name to variables here, e.g., p1, jv1 etc.
 			Pair<SourcePredicateJoin,Integer> spjOfAandEdge = j.node1;
 			GQRNode sourceVarNode1 = spjOfAandEdge.getA().getGqrNodes().get(spjOfAandEdge.getB());
-
 			//join also returns which pairs spjs (of a and b) are joined only distinguished
 			//			spj_joins = j.getDistinguishedJoinedSPJs(a,b);
 
@@ -548,6 +580,7 @@ public class GQR {
 			Pair<SourcePredicateJoin,Integer> spjOfBandEdge = j.node2;
 			GQRNode sourceVarNode2 = spjOfBandEdge.getA().getGqrNodes().get(spjOfBandEdge.getB());
 			int edgeNo2 = spjOfBandEdge.getB();
+			
 
 			if((sourceVarNode1.isExistential()!=sourceVarNode2.isExistential()) || (sourceVarNode1.isExistential() &&(j.jt == joinTypeInQuery.D)))
 				return null;
@@ -649,22 +682,200 @@ public class GQR {
 				//		else
 				//		addEquate(s1; va; s2; vb)
 				//		until until all possible pairs of sources are chosen
+				
+				
+				
+				//@param:sourceVarNode1 join node in one set(Say p1(x,y))
+				//@param:sourceVarNode2 join node in another set(Say p3(x,y))
+				//Compare nodes to see if there is any circle
+				
+				//check circle 
+				boolean isPLT =false;
 
-				for(JoinInView jv1: sourceVarNode1.getInfobox().getJoinInViews())
-				{
-					for(JoinInView jv2: sourceVarNode2.getInfobox().getJoinInViews())
+				
+				JoinInView jvA =sourceVarNode1.getInfobox().getJoinInViews().get(0);
+				JoinInView jvB =sourceVarNode2.getInfobox().getJoinInViews().get(0);
+				
+				
+				//TODO: Find out if one of they are from the same view && this view has a comparison predicate. 
+				//2 situations 
+				//1. Predicate (join PLT) Vs Predicate(join PLT)
+				//2. PLT VS Predicate(join PLT)
+				
+				// PLT VS Predicate(join PLT) 
+
+				if(spjOfAandEdge.getA().getQueryCPJ().getPredicate().isComparison()){
+					//A is PLT
+					int edgeA = spjOfAandEdge.getB();
+					int edgeB =edgeA;
+					//check the join PLT
+
+					for(JoinDescription jd2 :jvB.getJoinDescriptions()){
+						System.out.println("Join JoinPredicate name: "+ jd2.toString());
+						if(jd2.getPredicate().isComparison()){
+							edgeB = jd2.getEdgeNo();
+							break;
+						}
+					}
+					
+					if(edgeA != edgeB){
+						
+						System.out.println("Add Comprision PLT");
+						Pair<String,Integer> pairA = new Pair<String,Integer>(jvA.getSourceName(),edgeA);
+						Pair<String,Integer> pairB = new Pair<String,Integer>(jvB.getSourceName(),edgeB);
+						//checking circle
+						System.out.println("Pair A: "+pairA.toString()+" Pair B: "+pairB);
+						
+						System.out.println("Set: "+circleSet.toString());
+	
+						System.out.println("\n set: "+circleSet.toString());
+
+						if(circleSet.containsKey((jvA.getSourceName()))||circleSet.containsKey(jvB.getSourceName())){
+							System.out.println("Find PLT Circle Conflict");
+							circleSet.clear();
+							comParisonJoins.clear();
+							return null;
+						}
+						
+						comParisonJoins.add(new Pair(sourceVarNode1,sourceVarNode1));
+
+						circleSet.put(jvA.getSourceName(),edgeA);
+						circleSet.put(jvB.getSourceName(),edgeB);
+						System.out.println("PLT A"+pairA.toString()+" PLT B"+pairB.toString()+"\n set: "+circleSet.toString());
+//						System.out.println(circleList.toString());
+						isPLT= true;
+					}
+				}else if(spjOfBandEdge.getA().getQueryCPJ().getPredicate().isComparison()){
+					int edgeB = spjOfBandEdge.getB();
+					int edgeA =	edgeB;
+					//check the join PLT
+					for(JoinDescription jd1 :jvA.getJoinDescriptions()){
+						System.out.println("Join JoinPredicate name: "+ jd1.toString());
+						if(jd1.getPredicate().isComparison()){
+							edgeA = jd1.getEdgeNo();
+							break;
+						}
+					}
+					
+					if(edgeA != edgeB){
+						System.out.println("Add Comprision PLT");
+
+						Pair<String,Integer> pairA = new Pair<String,Integer>(jvA.getSourceName(),edgeA);
+						Pair<String,Integer> pairB = new Pair<String,Integer>(jvB.getSourceName(),edgeB);
+						//checking circle
+						
+						System.out.println("Pair A: "+pairA.toString()+" Pair B: "+pairB);
+						
+						System.out.println("Set: "+circleSet.toString());
+
+						System.out.println("\n set: "+circleSet.toString());
+
+						if(circleSet.containsKey((jvA.getSourceName()))||circleSet.containsKey(jvB.getSourceName())){
+							System.out.println("Find PLT Circle Conflict");
+							circleSet.clear();
+							comParisonJoins.clear();
+							return null;
+						}
+						
+						
+						comParisonJoins.add(new Pair(sourceVarNode1,sourceVarNode1));
+					
+						
+						circleSet.put(jvA.getSourceName(),edgeA);
+						circleSet.put(jvB.getSourceName(),edgeB);
+						System.out.println("PLT A"+pairA.toString()+" PLT B"+pairB.toString()+"\n set: "+circleSet.toString());
+
+						//						System.out.println(currentCircle.toString());
+						isPLT= true;
+					}
+				}else {
+					int edgeB = -1;
+					int edgeA =	-1;
+					//predicate A join PLT
+					
+					for(JoinDescription jd1 :jvA.getJoinDescriptions()){
+						System.out.println("Join JoinPredicate name: "+ jd1.toString());
+						if(jd1.getPredicate().isComparison()){
+							edgeA = jd1.getEdgeNo();
+							
+							break;
+						}
+					}
+					
+					edgeB = edgeA;
+					//predicate B join PLT
+
+					for(JoinDescription jd2 :jvB.getJoinDescriptions()){
+						System.out.println("Join JoinPredicate name: "+ jd2.toString());
+						if(jd2.getPredicate().isComparison()){
+							edgeB = jd2.getEdgeNo();
+							break;
+						}
+					}
+					
+					if(edgeA>0&&edgeB>0&&edgeA != edgeB){
+						System.out.println("Add Comprision PLT");
+
+						Pair<String,Integer> pairA = new Pair<String,Integer>(jvA.getSourceName(),edgeA);
+						Pair<String,Integer> pairB = new Pair<String,Integer>(jvB.getSourceName(),edgeB);
+						
+						//checking circle
+						
+						System.out.println("\n set: "+circleSet.toString());
+
+						if(circleSet.containsKey((jvA.getSourceName()))||circleSet.containsKey(jvB.getSourceName())){
+							System.out.println("Find PLT Circle Conflict");
+							circleSet.clear();
+							comParisonJoins.clear();
+							return null;
+						}
+						
+						comParisonJoins.add(new Pair(sourceVarNode1,sourceVarNode1));
+					
+						
+						circleSet.put(jvA.getSourceName(),edgeA);
+						circleSet.put(jvB.getSourceName(),edgeB);
+						System.out.println("PLT A"+pairA.toString()+" PLT B"+pairB.toString()+"\n set: "+circleSet.toString());
+
+						//						System.out.println(currentCircle.toString());
+						isPLT= true;
+					}
+					
+					
+				}
+				
+				//check circle 
+				
+				
+				
+				
+				
+		
+				
+				if(!isPLT){
+					
+					System.out.println("no PLT");
+					for(JoinInView jv1: sourceVarNode1.getInfobox().getJoinInViews())
 					{
-						assert(jv1.getRewritings().size() == 1);
-						assert(containsExactlyOncePerCompRew(a.getRewritings(),jv1.getRewritings().iterator().next()));
-						assert(jv2.getRewritings().size() == 1);
-						assert(containsExactlyOncePerCompRew(b.getRewritings(),jv2.getRewritings().iterator().next()));
-//						assert(sourceVarNode1.getQueryDistinguishedVar() == null || sourceVarNode1.getQueryDistinguishedVar().equals(sourceVarNode2.getQueryDistinguishedVar()));
-						addEquate(jv1, jv1.getHeadPosition(), jv2, jv2.getHeadPosition(),null/*sourceVarNode1.getQueryDistinguishedVar()*/);
+						for(JoinInView jv2: sourceVarNode2.getInfobox().getJoinInViews())
+						{
+							assert(jv1.getRewritings().size() == 1);
+							assert(containsExactlyOncePerCompRew(a.getRewritings(),jv1.getRewritings().iterator().next()));
+							assert(jv2.getRewritings().size() == 1);
+							assert(containsExactlyOncePerCompRew(b.getRewritings(),jv2.getRewritings().iterator().next()));
+							addEquate(jv1, jv1.getHeadPosition(), jv2, jv2.getHeadPosition(),null/*sourceVarNode1.getQueryDistinguishedVar()*/);
+
+						
+						}
 					}
 				}
 			}	
 		}
+		
+		// if no circle add equate back the PLT
 
+		
+		
 		//TODO if p satisfies Def 4.2
 		//		if(p.canMinimize())
 		//		//then potential merges can be added

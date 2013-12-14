@@ -50,6 +50,10 @@ public class Predicate {
 		this.isComparison = false;
 	}
 	
+	public boolean isComparison(){
+		return this.isComparison;
+	}
+	
 	public void makeComparisonPredicate()
 	{
 		this.isComparison = true;
